@@ -21,7 +21,6 @@ std::array<int,8> imgs {1,2,3,4,5,6,7,8};
 
 bool roll = true;
 bool anounceWinner = false;
-
 // Functions
 void loadReeels();
 void setSpritesOrigin();
