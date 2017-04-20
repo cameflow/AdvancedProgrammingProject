@@ -29,7 +29,6 @@ void setSpritesPositions();
 void shift(int pos, sf::Texture *arr);
 void checkWin();
 
-
 int main(int argc, char const *argv[]) {
   sf::RenderWindow window(sf::VideoMode(900, 1000), "Test application");
 
