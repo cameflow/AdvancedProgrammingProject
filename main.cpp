@@ -23,7 +23,6 @@ bool roll = true;
 bool anounceWinner = false;
 
 // Functions
-
 void loadReeels();
 void setSpritesOrigin();
 void setSpritesPositions();
