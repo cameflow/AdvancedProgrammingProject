@@ -31,13 +31,15 @@ textureImage reel3Textures[8];
 textureImage tempArray[8];
 // Struct array
 reelImage reelImages[9];
-// pthread_mutex_t mutex_1 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_1 = PTHREAD_MUTEX_INITIALIZER;
 // Array for shuffuled reel
 std::array<int,8> imgs {1,2,3,4,5,6,7,8};
 
 // Global control variables
 bool roll = true;
 bool anounceWinner = false;
+
+bool play = true;
 
 // ------ DECLARATION OF FUNCTIONS -------- //
 void loadReeels();
@@ -46,7 +48,7 @@ void setSpritesPositions();
 void shift(int pos, textureImage *arr);
 void checkWin();
 // Creation of threads
-// void createThreads();
+void createThreads();
 // Function that will make each reel spin
 void * spinReel1(void * arg);
 void * spinReel2(void * arg);
@@ -124,7 +126,7 @@ void setSpritesPositions()
 void shift(int pos, textureImage *arr)
 {
   int newpos;
-  // pthread_mutex_lock(&mutex_1);
+  pthread_mutex_lock(&mutex_1);
 
   for (int j = 0; j < 8; j++)
   {
@@ -145,7 +147,7 @@ void shift(int pos, textureImage *arr)
     }
   }
   // Unlock the mutex
-  // pthread_mutex_unlock(&mutex_1);
+  pthread_mutex_unlock(&mutex_1);
 
 }
 
@@ -167,35 +169,30 @@ void checkWin()
 // Create the threads and check for errors
 void createThreads()
 {
-  // int status;
-  // pthread_t tid[3];
-  //
-  // // Creation of threads
-  // // Error checking for threads
-  // status = pthread_create(&tid[0],NULL, &spinReel1,NULL);
-  // if (status)
-  // {
-  //   fprintf(stderr, "ERROR: pthread_create %d\n",status);
-  //   exit(EXIT_FAILURE);
-  // }
-  // status = pthread_create(&tid[1],NULL, &spinReel2,NULL);
-  // if (status)
-  // {
-  //   fprintf(stderr, "ERROR: pthread_create %d\n",status);
-  //   exit(EXIT_FAILURE);
-  // }
-  // status = pthread_create(&tid[2],NULL, &spinReel3,NULL);
-  // if (status)
-  // {
-  //   fprintf(stderr, "ERROR: pthread_create %d\n",status);
-  //   exit(EXIT_FAILURE);
-  // }
-  // status = pthread_create(&tid[3],NULL, &drawGame,NULL);
-  // if (status)
-  // {
-  //   fprintf(stderr, "ERROR: pthread_create %d\n",status);
-  //   exit(EXIT_FAILURE);
-  // }
+  int status;
+  pthread_t tid[3];
+
+  // Creation of threads
+  // Error checking for threads
+  status = pthread_create(&tid[0],NULL, &spinReel1,NULL);
+  if (status)
+  {
+    fprintf(stderr, "ERROR: pthread_create %d\n",status);
+    exit(EXIT_FAILURE);
+  }
+  status = pthread_create(&tid[1],NULL, &spinReel2,NULL);
+  if (status)
+  {
+    fprintf(stderr, "ERROR: pthread_create %d\n",status);
+    exit(EXIT_FAILURE);
+  }
+  status = pthread_create(&tid[2],NULL, &spinReel3,NULL);
+  if (status)
+  {
+    fprintf(stderr, "ERROR: pthread_create %d\n",status);
+    exit(EXIT_FAILURE);
+  }
+
 
 }
 
@@ -204,8 +201,8 @@ void  drawGame()
 {
   sf::RenderWindow window(sf::VideoMode(900, 1000), "Test application");
   int cont = 1;
-  // createThreads();
-  // pthread_exit(NULL);
+  createThreads();
+
   while (window.isOpen())
 	{
 		sf::Event event;
@@ -232,7 +229,7 @@ void  drawGame()
     // Clean the previous frame
 		window.clear(sf::Color::White);
 
-    // pthread_mutex_lock(&mutex_1);
+    pthread_mutex_lock(&mutex_1);
 
     // Add the texture to the sprite in the window
     reelImages[0].sprite.setTexture(reel1Textures[3].texture);
@@ -260,51 +257,61 @@ void  drawGame()
       window.draw(reelImages[i].sprite);
     }
 
-    // Shift all the reels or if you stop check if you won
-    if(roll)
-    {
-      shift(SPEED_REEL_1, reel1Textures);
-      shift(SPEED_REEL_2, reel2Textures);
-      shift(SPEED_REEL_3, reel3Textures);
-    }
-    else
+    // If reels are not rolling check if you won
+    if(!roll)
     {
       checkWin();
     }
-    // pthread_mutex_unlock(&mutex_1);
+
+    pthread_mutex_unlock(&mutex_1);
 
     // Display everything in the window
 		window.display();
 	}
+  play = false;
   // return NULL;
+  pthread_exit(NULL);
+
 }
 
 
 // Function that will make the reel spin
-// void * spinReel1(void * arg)
-// {
-//   while (roll)
-//   {
-//     shift(SPEED_REEL_1, reel1Textures);
-//   }
-//
-//   return NULL;
-// }
-// void * spinReel2(void * arg)
-// {
-//   while (roll)
-//   {
-//     shift(SPEED_REEL_2, reel2Textures);
-//   }
-//
-//   return NULL;
-// }
-// void * spinReel3(void * arg)
-// {
-//   while (roll)
-//   {
-//     shift(SPEED_REEL_3, reel3Textures);
-//   }
-//
-//   return NULL;
-// }
+void * spinReel1(void * arg)
+{
+  while (play)
+  {
+    if(roll)
+    {
+      shift(SPEED_REEL_1, reel1Textures);
+    }
+
+  }
+
+  return NULL;
+}
+void * spinReel2(void * arg)
+{
+  while (play)
+  {
+    if(roll)
+    {
+      shift(SPEED_REEL_2, reel2Textures);
+    }
+
+  }
+
+  return NULL;
+}
+void * spinReel3(void * arg)
+{
+  while (play)
+  {
+    if(roll)
+    {
+      shift(SPEED_REEL_3, reel3Textures);
+    }
+
+  }
+
+  return NULL;
+}
