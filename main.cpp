@@ -31,30 +31,181 @@ textureImage reel3Textures[8];
 textureImage tempArray[8];
 // Struct array
 reelImage reelImages[9];
-
-
+// pthread_mutex_t mutex_1 = PTHREAD_MUTEX_INITIALIZER;
 // Array for shuffuled reel
 std::array<int,8> imgs {1,2,3,4,5,6,7,8};
 
+// Global control variables
 bool roll = true;
 bool anounceWinner = false;
-// Functions
+
+// ------ DECLARATION OF FUNCTIONS -------- //
 void loadReeels();
 void setSpritesOrigin();
 void setSpritesPositions();
 void shift(int pos, textureImage *arr);
 void checkWin();
 // Creation of threads
-void createThreads();
+// void createThreads();
+// Function that will make each reel spin
+void * spinReel1(void * arg);
+void * spinReel2(void * arg);
+void * spinReel3(void * arg);
+// Main function to show the game in the screen
+void  drawGame();
+
 
 int main(int argc, char const *argv[]) {
-  sf::RenderWindow window(sf::VideoMode(900, 1000), "Test application");
+
 
   loadReeels();
   setSpritesOrigin();
   setSpritesPositions();
 
+  drawGame();
+  // createThreads();
+  // pthread_exit(NULL);
+
+
+  return 0;
+}
+
+// Loading the images in the reels
+// Filling the texture arrays
+void loadReeels()
+{
+  char file[10];
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  shuffle (imgs.begin(), imgs.end(), std::default_random_engine(seed));
+
+  for (int i = 1; i < 9; i++)
+  {
+    sprintf(file, "img-%d.png", 9-i);
+    reel1Textures[i-1].texture.loadFromFile(file);
+    reel1Textures[i-1].code = 9-i;
+    sprintf(file, "img-%d.png", 9-i);
+    reel2Textures[i-1].texture.loadFromFile(file);
+    reel2Textures[i-1].code = 9-i;
+    sprintf(file, "img-%d.png", imgs[i-1]);
+    reel3Textures[i-1].texture.loadFromFile(file);
+    reel3Textures[i-1].code = imgs[i-1];
+  }
+}
+
+// Seting the origin of the sprites to (0,0)
+void setSpritesOrigin()
+{
+  for(int i = 0; i < 9; i++)
+  {
+    reelImages[i].sprite.setOrigin(0,0);
+  }
+}
+
+// Setting the position of the sprites, the 3x3 grid is created
+void setSpritesPositions()
+{
+  int x = 0;
+  int y = 0;
+  int cont = 0;
+  for (int i = 1; i <= 3; i++)
+  {
+    for(int j = 1; j <= 3; j++)
+    {
+      reelImages[cont].sprite.setPosition(sf::Vector2f(x,y));
+      y += 250;
+      cont ++;
+    }
+    y = 0;
+    x += 300;
+  }
+}
+
+// Function to shift the array, it recieves a position and an array of textures
+void shift(int pos, textureImage *arr)
+{
+  int newpos;
+  // pthread_mutex_lock(&mutex_1);
+
+  for (int j = 0; j < 8; j++)
+  {
+    tempArray[j] = arr[j];
+  }
+
+  // Iterate through the array and move it's conent to it's new position in the reel
+  for (int i = 0; i < 8; i++)
+  {
+    newpos = i+pos;
+    if(newpos < 8)
+    {
+      arr[i] = tempArray[newpos];
+    }
+    else if (newpos >= 8)
+    {
+      arr[i] = tempArray[newpos-8];
+    }
+  }
+  // Unlock the mutex
+  // pthread_mutex_unlock(&mutex_1);
+
+}
+
+// Checks if the middle row is equal so you can win
+void checkWin()
+{
+  if(!anounceWinner)
+  {
+    if (reelImages[1].code == reelImages[4].code && reelImages[7].code == reelImages[1].code)
+    {
+      std::cout << "YOU WON ON THE MIDDLE LINE" << std::endl;
+    }
+    anounceWinner = true;
+  }
+
+}
+
+
+// Create the threads and check for errors
+void createThreads()
+{
+  // int status;
+  // pthread_t tid[3];
+  //
+  // // Creation of threads
+  // // Error checking for threads
+  // status = pthread_create(&tid[0],NULL, &spinReel1,NULL);
+  // if (status)
+  // {
+  //   fprintf(stderr, "ERROR: pthread_create %d\n",status);
+  //   exit(EXIT_FAILURE);
+  // }
+  // status = pthread_create(&tid[1],NULL, &spinReel2,NULL);
+  // if (status)
+  // {
+  //   fprintf(stderr, "ERROR: pthread_create %d\n",status);
+  //   exit(EXIT_FAILURE);
+  // }
+  // status = pthread_create(&tid[2],NULL, &spinReel3,NULL);
+  // if (status)
+  // {
+  //   fprintf(stderr, "ERROR: pthread_create %d\n",status);
+  //   exit(EXIT_FAILURE);
+  // }
+  // status = pthread_create(&tid[3],NULL, &drawGame,NULL);
+  // if (status)
+  // {
+  //   fprintf(stderr, "ERROR: pthread_create %d\n",status);
+  //   exit(EXIT_FAILURE);
+  // }
+
+}
+
+// Main function of the game that draws everything in the screen
+void  drawGame()
+{
+  sf::RenderWindow window(sf::VideoMode(900, 1000), "Test application");
   int cont = 1;
+  // createThreads();
+  // pthread_exit(NULL);
   while (window.isOpen())
 	{
 		sf::Event event;
@@ -81,7 +232,9 @@ int main(int argc, char const *argv[]) {
     // Clean the previous frame
 		window.clear(sf::Color::White);
 
+    // pthread_mutex_lock(&mutex_1);
 
+    // Add the texture to the sprite in the window
     reelImages[0].sprite.setTexture(reel1Textures[3].texture);
     reelImages[0].code = reel1Textures[3].code;
     reelImages[1].sprite.setTexture(reel1Textures[4].texture);
@@ -101,13 +254,13 @@ int main(int argc, char const *argv[]) {
     reelImages[8].sprite.setTexture(reel3Textures[5].texture);
     reelImages[8].code = reel3Textures[5].code;
 
-
+    // Draw all the sprites
     for (int i = 0; i < 9; i++)
     {
       window.draw(reelImages[i].sprite);
     }
 
-
+    // Shift all the reels or if you stop check if you won
     if(roll)
     {
       shift(SPEED_REEL_1, reel1Textures);
@@ -118,129 +271,40 @@ int main(int argc, char const *argv[]) {
     {
       checkWin();
     }
+    // pthread_mutex_unlock(&mutex_1);
 
+    // Display everything in the window
 		window.display();
 	}
-
-  return 0;
-}
-
-void loadReeels()
-{
-  char file[10];
-  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-  shuffle (imgs.begin(), imgs.end(), std::default_random_engine(seed));
-
-  for (int i = 1; i < 9; i++)
-  {
-    sprintf(file, "img-%d.png", 9-i);
-    reel1Textures[i-1].texture.loadFromFile(file);
-    reel1Textures[i-1].code = 9-i;
-    sprintf(file, "img-%d.png", 9-i);
-    reel2Textures[i-1].texture.loadFromFile(file);
-    reel2Textures[i-1].code = 9-i;
-    sprintf(file, "img-%d.png", imgs[i-1]);
-    std::cout << imgs[i-1] << std::endl;
-    reel3Textures[i-1].texture.loadFromFile(file);
-    reel3Textures[i-1].code = imgs[i-1];
-  }
-}
-
-void setSpritesOrigin()
-{
-  for(int i = 0; i < 9; i++)
-  {
-    reelImages[i].sprite.setOrigin(0,0);
-  }
-}
-
-void setSpritesPositions()
-{
-  int x = 0;
-  int y = 0;
-  int cont = 0;
-  for (int i = 1; i <= 3; i++)
-  {
-    for(int j = 1; j <= 3; j++)
-    {
-      reelImages[cont].sprite.setPosition(sf::Vector2f(x,y));
-      y += 250;
-      cont ++;
-    }
-    y = 0;
-    x += 300;
-  }
-}
-
-void shift(int pos, textureImage *arr)
-{
-  int newpos;
-
-  for (int j = 0; j < 8; j++)
-  {
-    tempArray[j] = arr[j];
-  }
-
-  // Iterate through the array and move it's conent to it's new position in the reel
-  for (int i = 0; i < 8; i++)
-  {
-    newpos = i+pos;
-    if(newpos < 8)
-    {
-      arr[i] = tempArray[newpos];
-    }
-    else if (newpos >= 8)
-    {
-      arr[i] = tempArray[newpos-8];
-    }
-  }
-
-}
-
-void checkWin()
-{
-  if(!anounceWinner)
-  {
-    if (reelImages[1].code == reelImages[4].code && reelImages[7].code == reelImages[1].code)
-    {
-      std::cout << "YOU WON ON THE MIDDLE LINE" << std::endl;
-    }
-    anounceWinner = true;
-  }
-
+  // return NULL;
 }
 
 
-// Create the threads and check for errors
-void createThreads()
-{
-  int status;
-  pthread_t tid[NUM_THREADS];
-
-  // Creation of threads
-  // Error checking for threads
-  status = pthread_create(&tid[0],NULL, &spinReel1,NULL);
-  if (status)
-  {
-    fprintf(stderr, "ERROR: pthread_create %d\n",status);
-    exit(EXIT_FAILURE);
-  }
-  status = pthread_create(&tid[1],NULL, &spinReel2,NULL);
-  if (status)
-  {
-    fprintf(stderr, "ERROR: pthread_create %d\n",status);
-    exit(EXIT_FAILURE);
-  }
-  status = pthread_create(&tid[2],NULL, &spinReel3,NULL);
-  if (status)
-  {
-    fprintf(stderr, "ERROR: pthread_create %d\n",status);
-    exit(EXIT_FAILURE);
-  }
-  status = pthread_create(&tid[3],NULL, &stopReel,NULL);
-  if (status)
-  {
-    fprintf(stderr, "ERROR: pthread_create %d\n",status);
-    exit(EXIT_FAILURE);
-  }
-}
+// Function that will make the reel spin
+// void * spinReel1(void * arg)
+// {
+//   while (roll)
+//   {
+//     shift(SPEED_REEL_1, reel1Textures);
+//   }
+//
+//   return NULL;
+// }
+// void * spinReel2(void * arg)
+// {
+//   while (roll)
+//   {
+//     shift(SPEED_REEL_2, reel2Textures);
+//   }
+//
+//   return NULL;
+// }
+// void * spinReel3(void * arg)
+// {
+//   while (roll)
+//   {
+//     shift(SPEED_REEL_3, reel3Textures);
+//   }
+//
+//   return NULL;
+// }
