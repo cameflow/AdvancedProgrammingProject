@@ -32,6 +32,7 @@ textureImage reels[NUM_OF_REELS][8];
 textureImage tempArray[8];
 // Struct array
 reelImage rImg[NUM_OF_REELS][3];
+// Declaration of the mutex
 pthread_mutex_t mutex_1 = PTHREAD_MUTEX_INITIALIZER;
 // Array for shuffuled reel
 std::array<int,8> imgs {1,2,3,4,5,6,7,8};
@@ -39,7 +40,6 @@ std::array<int,8> imgs {1,2,3,4,5,6,7,8};
 // Global control variables
 bool roll = true;
 bool anounceWinner = false;
-
 bool play = true;
 
 // ------ DECLARATION OF FUNCTIONS -------- //
@@ -60,14 +60,15 @@ void * spinReel5(void * arg);
 // Main function to show the game in the screen
 void  drawGame();
 
+// Array of functions for when you create the threads
 spinFunctions functions[] =
-    {
-        spinReel1,
-        spinReel2,
-        spinReel3,
-        spinReel4,
-        spinReel5
-    };
+{
+  spinReel1,
+  spinReel2,
+  spinReel3,
+  spinReel4,
+  spinReel5
+};
 
 
 int main(int argc, char const *argv[]) {
@@ -96,10 +97,9 @@ void setSpritesOrigin()
   }
 }
 
-// Setting the position of the sprites, the 3x3 grid is created
+// Setting the position of the sprites
 void setSpritesPositions()
 {
-
   int x = 0;
   int y = 0;
 
@@ -112,13 +112,13 @@ void setSpritesPositions()
     }
     y = 0;
     x += 300;
-
   }
-
 
 }
 
 // Function to shift the array, it recieves a position and an array of textures
+// First copies elements to a temp array
+// Then returns the elements to the original array but moved an offset
 void shift(int pos, textureImage *arr)
 {
   int newpos;
@@ -148,6 +148,8 @@ void shift(int pos, textureImage *arr)
 }
 
 // Checks if the middle row is equal so you can win
+// Firsts creates an array with the code of the elements in the middle row
+// Then checks if all those codes are the same
 void checkWin()
 {
   int codes[NUM_OF_REELS];
@@ -158,21 +160,17 @@ void checkWin()
     {
       codes[i] = rImg[i][1].code;
     }
-    for(int i = 0; i < NUM_OF_REELS; i++)
-    {
-      std::cout << codes[i];
-    }
-    std::cout << std::endl;
+
     if(checkEqual(codes))
     {
       std::cout << "GANOOO" << '\n';
     }
     anounceWinner = true;
   }
-
 }
 
 // Create the threads and check for errors
+// Uses an array of functions to create the threads
 void createThreads()
 {
   int status;
@@ -180,7 +178,6 @@ void createThreads()
 
   // Creation of threads
   // Error checking for threads
-
   for(int i = 0; i < NUM_OF_REELS; i++)
   {
     status = pthread_create(&tid[i], NULL, functions[i],NULL);
@@ -189,9 +186,7 @@ void createThreads()
       fprintf(stderr, "ERROR: pthread_create %d\n",status);
       exit(EXIT_FAILURE);
     }
-
   }
-
 }
 
 // Main function of the game that draws everything in the screen
@@ -356,6 +351,7 @@ void createReels()
   }
 }
 
+// Checks if all the elements of an array are equal
 bool checkEqual(int a[])
 {
   for (unsigned i = 1; i < NUM_OF_REELS; i++)
