@@ -11,7 +11,7 @@
 #define SPEED_REEL_1 1
 #define SPEED_REEL_2 3
 #define SPEED_REEL_3 5
-#define NUM_OF_REELS 3
+#define NUM_OF_REELS 4
 
 // Struct for the imagesPrinted on the reel
 struct reelImage {
@@ -59,6 +59,12 @@ void * spinReel4(void * arg);
 void * spinReel5(void * arg);
 // Main function to show the game in the screen
 void  drawGame();
+
+sf::RectangleShape drawPlaybutton();
+sf::RectangleShape drawStopbutton();
+sf::Text drawStartText();
+sf::Text drawStopText();
+sf::Font font;
 
 // Array of functions for when you create the threads
 spinFunctions functions[] =
@@ -217,6 +223,22 @@ void  drawGame()
           anounceWinner = false;
         }
       }
+      if (event.type == sf::Event::MouseButtonPressed)
+      {
+        if (event.mouseButton.button == sf::Mouse::Left)
+        {
+            if(event.mouseButton.x > 50 && event.mouseButton.x < 450 && event.mouseButton.y > 800 && event.mouseButton.y < 950)
+            {
+              roll = true;
+              anounceWinner = false;
+            }
+            if(event.mouseButton.x > 450 && event.mouseButton.x < 850 && event.mouseButton.y > 800 && event.mouseButton.y < 950)
+            {
+              roll = false;
+            }
+
+        }
+      }
 		}
 
     // Clean the previous frame
@@ -246,6 +268,11 @@ void  drawGame()
         window.draw(rImg[i][j].sprite);
       }
     }
+    window.draw(drawPlaybutton());
+    window.draw(drawStopbutton());
+    window.draw(drawStartText());
+    window.draw(drawStopText());
+
 
     // If reels are not rolling check if you won
     if(!roll)
@@ -258,7 +285,7 @@ void  drawGame()
 	}
   play = false;
   // return NULL;
-  pthread_exit(NULL);
+  // pthread_exit(NULL);
 
 }
 
@@ -362,4 +389,53 @@ bool checkEqual(int a[])
     }
   }
   return true;
+}
+
+sf::RectangleShape drawPlaybutton()
+{
+  sf::RectangleShape start(sf::Vector2f(400, 150));
+  start.setPosition(50,800);
+  sf::Color color(150, 255, 150);
+  start.setFillColor(color);
+  return start;
+}
+
+sf::Text drawStartText()
+{
+  sf::Text text;
+
+  if (!font.loadFromFile("Akashi.ttf"))
+	{
+		std::cout << "Could not load font!\n" << std::endl;
+	}
+  text.setFont(font);
+	text.setString("START");
+	text.setCharacterSize(90);
+	text.setColor(sf::Color::Blue);
+  text.setPosition(sf::Vector2f(100, 820));
+  return text;
+}
+sf::Text drawStopText()
+{
+  sf::Text text;
+
+  if (!font.loadFromFile("Akashi.ttf"))
+	{
+		std::cout << "Could not load font!\n" << std::endl;
+	}
+  text.setFont(font);
+	text.setString("STOP");
+	text.setCharacterSize(90);
+	text.setColor(sf::Color::Blue);
+  text.setPosition(sf::Vector2f(500, 820));
+  return text;
+}
+
+sf::RectangleShape drawStopbutton()
+{
+  sf::RectangleShape start(sf::Vector2f(400, 150));
+  start.setPosition(450,800);
+  sf::Color color(255, 150, 150);
+  start.setFillColor(color);
+  return start;
 }
